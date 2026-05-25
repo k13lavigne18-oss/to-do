@@ -11,7 +11,13 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 
 // ★あなたの指摘から生まれた神リファクタリング！
 // APIのパスを渡すだけで、自動的に正しいURLを作ってくれる専用関数
-const endpoint = (path: string) => `${API_URL}${path}`;
+//const endpoint = (path: string) => `${API_URL}${path}`;
+const endpoint = (path: string) => {
+  // 本番環境なら /api を消して、直接Goサーバーの /todos に繋ぐ
+  if (API_URL) return `${API_URL}${path.replace('/api', '')}`;
+  // ローカルなら今まで通り /api を残す
+  return path;
+};
 
 const authHeaders = {
   'Authorization': 'Basic ' + btoa('admin:password'),

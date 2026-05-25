@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Todo - The Magic Inside</title>
+    <style>
+        /* Apple風、洗練されたベース設定 */
+        :root {
+            --apple-blue: #0071e3;
+            --apple-bg: #f5f5f7;
+            --glass-bg: rgba(255, 255, 255, 0.6);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--apple-bg);
+            color: #1d1d1f;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden; /* 横スクロールを防止 */
+        }
+
+        /* [重要] にゅるっとアニメーションのための初期状態 */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: scale(0.8) translateY(50px); /* 縮小して、少し下に配置 */
+            transition: all 1.2s cubic-bezier(0.22, 1, 0.36, 1); /* Apple風のスムーズな動き */
+        }
+
+        /* 画面に入ったときの状態 */
+        .animate-on-scroll.show {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        /* 1. ヒーローセクション（最初の画面） */
+        .hero {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* かっこいいグラデーション背景 */
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 64px;
+            font-weight: 700;
+            letter-spacing: -1.5px;
+            margin: 0;
+            /* グラデーションテキスト */
+            background: -webkit-linear-gradient(315deg, #73a5ff, #5400d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .scroll-down {
+            position: absolute;
+            bottom: 30px;
+            font-size: 14px;
+            color: #86868b;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
+
+        /* 2. Todoアプリセクション */
+        .app-section {
+            padding: 120px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 50px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.04);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h2 { font-weight: 600; font-size: 32px; text-align: center; margin-top: 0; margin-bottom: 30px; letter-spacing: -0.5px; }
+
+        .input-group { display: flex; gap: 10px; margin-bottom: 30px; }
+
+        input[type="text"] { flex: 1; padding: 16px 20px; border: 1px solid #d2d2d7; border-radius: 14px; font-size: 16px; outline: none; transition: all 0.3s; background: rgba(255, 255, 255, 0.8); }
+        input[type="text"]:focus { border-color: var(--apple-blue); box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1); }
+
+        button.add-btn { background-color: var(--apple-blue); color: white; border: none; border-radius: 14px; padding: 0 28px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        button.add-btn:hover { background-color: #0077ed; }
+
+        .todo-list { list-style: none; padding: 0; margin: 0; }
+        .todo-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
+        .task-text { font-size: 16px; }
+
+        .todo-actions button { background: #e8e8ed; color: #1d1d1f; border: none; padding: 10px 16px; font-size: 14px; border-radius: 10px; cursor: pointer; margin-left: 8px; }
+        .todo-actions button.delete { color: #ff3b30; }
+
+        /* 3. 仕組み解説セクション */
+        .explain-section {
+            padding: 120px 20px;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+        }
+
+        .explain-container {
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .explain-card {
+            background: var(--apple-bg);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            text-align: left;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .explain-card h3 {
+            margin-top: 0;
+            color: var(--apple-blue);
+            font-size: 20px;
+        }
+
+        .code-inline {
+            font-family: Menlo, monospace;
+            background-color: rgba(0,0,0,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+    </style>
+</head>
+<body>
+
+    <section class="hero">
+        <h1 class="hero-title animate-on-scroll">Modern Todo<br>The Magic Inside</h1>
+        <div class="scroll-down">Scroll Down ↓</div>
+    </section>
+
+    <section class="app-section">
+        <div class="container animate-on-scroll">
+            <h2>Your Tasks</h2>
+            
+            <div class="input-group">
+                <input type="text" id="taskInput" placeholder="新しいタスクを入力...">
+                <button class="add-btn" onclick="addTodo()">追加</button>
+            </div>
+
+            <ul class="todo-list" id="todoList">
+                </ul>
+        </div>
+    </section>
+
+    <section class="explain-section">
+        <div class="explain-container">
+            <h2 class="animate-on-scroll">How it Works</h2>
+            
+            <div class="explain-card animate-on-scroll">
+                <h3>1. 入力して「追加」を押すと...</h3>
+                <p>JavaScript（フロントエンド）が起動します。<br>
+                   <code class="code-inline">fetch('/todos', { method: 'POST', ... })</code> を使い、入力されたテキストをGoサーバーへ送信します。</p>
+            </div>
+
+            <div class="explain-card animate-on-scroll">
+                <h3>2. 裏側のGoサーバーが受け取る</h3>
+                <p>Goのルーティング機能が、送られてきたデータを受け取ります。<br>
+                   JSONデータをGoの構造体に変換し、データベース（次のステップで設置！）へ保存します。</p>
+            </div>
+
+            <div class="explain-card animate-on-scroll">
+                <h3>3. Goが結果をJSONで返す</h3>
+                <p>保存が完了すると、Goは最新のTodoリストを<br>
+                   <code class="code-inline">json.NewEncoder(w).Encode(todos)</code> でJSON形式のテキストに変換し、フロントエンドに返します。</p>
+            </div>
+
+            <div class="explain-card animate-on-scroll">
+                <h3>4. フロントエンドが画面を描画</h3>
+                <p>JavaScriptが受け取ったJSONデータを解析し、<br>
+                   新しいHTML要素を組み立てて画面を更新します。<br>
+                   これが、にゅるっとした動きとともに表示されるTodoの正体です！</p>
+            </div>
+
+        </div>
+    </section>
+
+    <script>
+        // --- アニメーション用のJavaScript (IntersectionObserver) ---
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    // 画面に入ったら "show" クラスを追加
+                    entry.target.classList.add('show');
+                }
+            });
+        }, {
+            threshold: 0.1 // 要素が10%見えたらトリガー
+        });
+
+        // "animate-on-scroll" クラスがついた要素を全て監視
+        document.querySelectorAll('.animate-on-scroll').forEach((el) => observer.observe(el));
+
+        // 【追加】認証用のヘッダーを用意 (admin:password をBase64形式に暗号化)
+        const authHeaders = {
+            'Authorization': 'Basic ' + btoa('admin:password'),
+            'Content-Type': 'application/json'
+        };
+
+        // --- 以前作った Todo読み込み用のJavaScript ---
+        async function fetchTodos() {
+            try {
+                // `/todos` だけでアクセス可能（main.goで静的ファイルを返すようにしたため）
+                //const response = await fetch('/todos');
+                // 変更: headers を追加
+                const response = await fetch('/todos', { headers: authHeaders });
+                const todos = await response.json();
+                
+                const list = document.getElementById('todoList');
+                list.innerHTML = ''; 
+
+                todos.forEach(todo => {
+                    list.innerHTML += `
+                        <li class="todo-item animate-on-scroll show"> <span class="task-text" style="${todo.is_done ? 'text-decoration: line-through; color: #86868b;' : ''}">
+                                ${todo.task}
+                            </span>
+                            <div class="todo-actions">
+                                <button onclick="toggleTodo(${todo.id})">${todo.is_done ? '戻す' : '完了'}</button>
+                                <button class="delete" onclick="deleteTodo(${todo.id})">削除</button>
+                            </div>
+                        </li>
+                    `;
+                });
+            } catch (error) {
+                console.error('データの取得に失敗しました:', error);
+            }
+        }
+
+        fetchTodos();
+
+        // ダミーのアラート
+        //function addTodo() { alert("ここにテキストを入れると、JavaScriptがPOSTリクエストを作ってGoサーバーへ送ります。\nGoが受け取ったらDBに保存し、最新のJSONを返します。"); }
+        async function addTodo() {
+            // 1. 入力欄のテキストを取得
+            const input = document.getElementById('taskInput');
+            const taskText = input.value;
+
+            if (taskText === '') return; // 空っぽなら何もしない
+
+            try {
+                // 2. GoサーバーへPOSTリクエスト（追加のお願い）を送信
+                await fetch('/todos', {
+                    method: 'POST',
+                    /*
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    */
+                    headers: authHeaders, // ← 変更
+                    // JavaScriptのデータをJSONテキストに変換して送る
+                    body: JSON.stringify({ task: taskText }) 
+                });
+
+                // 3. 入力欄を空にして、リストを最新状態に再読み込み
+                input.value = '';
+                fetchTodos(); 
+                
+            } catch (error) {
+                console.error('追加エラー:', error);
+            }
+        }
+        //function toggleTodo(id) { alert("「完了」を押すと、JavaScriptがPUTリクエストを送り、GoがDBのデータを更新します。"); }
+        //function deleteTodo(id) { alert("「削除」を押すと、JavaScriptがDELETEリクエストを送り、GoがDBからデータを消します。"); }
+        async function toggleTodo(id) {
+            try {
+                // Goサーバーの PUT /todos/{id} にアクセス
+                //await fetch(`/todos/${id}`, { method: 'PUT' });
+                // 変更: headers を追加
+                await fetch(`/todos/${id}`, { method: 'PUT', headers: authHeaders });
+                
+                // 成功したら画面を最新状態に再読み込み
+                fetchTodos(); 
+            } catch (error) {
+                console.error('更新エラー:', error);
+            }
+        }
+
+        async function deleteTodo(id) {
+            try {
+                // Goサーバーの DELETE /todos/{id} にアクセス
+                await fetch(`/todos/${id}`, { method: 'DELETE' });
+                
+                // 成功したら画面を最新状態に再読み込み
+                fetchTodos(); 
+            } catch (error) {
+                console.error('削除エラー:', error);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -25,7 +25,7 @@ type Todo struct {
 	Details   string `json:"details"`
 	Link      string `json:"link"`
 }
-
+/*
 func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, pass, ok := r.BasicAuth()
@@ -36,7 +36,7 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 		next(w, r)
 	}
-}
+}*/
 
 // 外部（React）からのアクセスを許可するCORS設定
 func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
